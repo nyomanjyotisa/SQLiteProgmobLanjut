@@ -3,6 +3,8 @@ package id.jyotisa.roomprogmoblanjut;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -11,41 +13,43 @@ import android.widget.Toast;
 
 import com.google.android.material.textfield.TextInputLayout;
 
-import id.jyotisa.roomprogmoblanjut.Database.AppDatabase;
-import id.jyotisa.roomprogmoblanjut.Database.Entity.Mahasiswa;
+import id.jyotisa.roomprogmoblanjut.Helper.Database;
 
 public class UpdateActivity extends AppCompatActivity {
+    protected Cursor cursor;
+    Database database;
     private Button btnSubmit;
     private TextInputLayout name, location;
-    private AppDatabase database;
-    private int idEdit = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_update);
 
+        database = new Database(this);
         name = findViewById(R.id.inputName);
         location = findViewById(R.id.inputLocation);
         btnSubmit = (Button) findViewById(R.id.createButton);
 
+        SQLiteDatabase db = database.getReadableDatabase();
 
-        database = AppDatabase.getInstance(getApplicationContext());
+        cursor = db.rawQuery("SELECT * FROM tb_mahasiswa WHERE id = '"+getIntent().getStringExtra("id")+"'", null);
+        cursor.moveToFirst();
 
-        Intent data = getIntent();
-        idEdit = data.getIntExtra("nim", 0);
-        if(idEdit > 0){
-            Mahasiswa mahasiswa = database.mahasiswaDao().get(idEdit);
-            name.getEditText().setText(mahasiswa.nama);
-            location.getEditText().setText(mahasiswa.alamat);
+        if(cursor.getCount() > 0){
+            name.getEditText().setText(cursor.getString(1).toString());
+            location.getEditText().setText(cursor.getString(2).toString());
         }
 
         btnSubmit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                database.mahasiswaDao().update(name.getEditText().getText().toString(), location.getEditText().getText().toString(), idEdit);
-                Toast.makeText(UpdateActivity.this, "Data Telah Diperbaharui", Toast.LENGTH_SHORT).show();
-                finish();
+                SQLiteDatabase db = database.getWritableDatabase();
+                db.execSQL("UPDATE tb_mahasiswa SET name = '"+name.getEditText().getText().toString()+"', location = '"+location.getEditText().getText().toString()+"' WHERE id = '"+getIntent().getStringExtra("id")+"'");
+                Toast.makeText(UpdateActivity.this, "Data Berhasil Diperbaharui", Toast.LENGTH_SHORT).show();
+                MainActivity.mainActivity.RefreshList();
+                Intent i = new Intent(getApplicationContext(),MainActivity.class);
+                startActivity(i);
             }
         });
     }

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingLeft="16dp"
+    android:paddingTop="16dp"
+    android:paddingRight="16dp"
+    android:paddingBottom="16dp"
+    tools:context=".DetailActivity">
+
+    <TextView
+        android:id="@+id/labelNIM"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="ID"/>
+
+    <TextView
+        android:id="@+id/viewNIM"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20dp"
+        android:textColor="@color/blue"
+        android:text="ID"/>
+
+    <TextView
+        android:id="@+id/labelNama"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Company Name"
+        android:layout_marginTop="10dp"
+        />
+
+    <TextView
+        android:id="@+id/viewNama"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20dp"
+        android:textColor="@color/blue"
+        android:text="Company Name"/>
+
+
+    <TextView
+        android:id="@+id/labelAlamat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Location"
+        android:layout_marginTop="10dp"
+        />
+
+    <TextView
+        android:id="@+id/viewAlamat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20dp"
+        android:textColor="@color/blue"
+        android:text="Location"/>
+
+    <Button
+        android:id="@+id/buttonBack"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Back"
+        android:layout_marginTop="20dp"/>
+
+</LinearLayout>

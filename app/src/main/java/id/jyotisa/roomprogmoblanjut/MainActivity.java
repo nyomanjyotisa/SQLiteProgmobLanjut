@@ -2,76 +2,36 @@ package id.jyotisa.roomprogmoblanjut;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.room.Update;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.View;
-import android.widget.Button;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import id.jyotisa.roomprogmoblanjut.Adapter.MahasiswaAdapter;
-import id.jyotisa.roomprogmoblanjut.Database.AppDatabase;
-import id.jyotisa.roomprogmoblanjut.Database.Entity.Mahasiswa;
+import id.jyotisa.roomprogmoblanjut.Helper.Database;
 
 public class MainActivity extends AppCompatActivity {
-    private RecyclerView daftarMahasiswa;
-    FloatingActionButton addButton;
-    private AppDatabase database;
-    private MahasiswaAdapter mahasiswaAdapter;
-    private List<Mahasiswa> list = new ArrayList<>();
-    private AlertDialog.Builder dialog;
+    String[] daftar;
+    String[] label;
+    ListView listView;
+    Menu menu;
+    protected Cursor cursor;
+    Database database;
+    public static MainActivity mainActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        daftarMahasiswa = findViewById(R.id.daftarMahasiswa);
-        addButton = findViewById(R.id.addButon);
-
-        database = AppDatabase.getInstance(getApplicationContext());
-        list.clear();
-        list.addAll(database.mahasiswaDao().getAll());
-        mahasiswaAdapter = new MahasiswaAdapter(getApplicationContext(), list);
-
-        mahasiswaAdapter.setDialog(new MahasiswaAdapter.Dialog() {
-            @Override
-            public void onClick(int position) {
-                final CharSequence[] dialogItem = {"Edit", "Hapus"};
-                dialog = new AlertDialog.Builder(MainActivity.this);
-                dialog.setItems(dialogItem, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        switch(i){
-                            case 0:
-                                Intent editIntent = new Intent(MainActivity.this, UpdateActivity.class);
-                                editIntent.putExtra("nim", list.get(position).nim);
-                                startActivity(editIntent);
-                                break;
-                            case 1:
-                                Mahasiswa mahasiswa = list.get(position);
-                                database.mahasiswaDao().delete(mahasiswa);
-                                onStart();
-                                break;
-                        }
-                    }
-                });
-                dialog.show();
-            }
-        });
-
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext(), RecyclerView.VERTICAL, false);
-        daftarMahasiswa.setLayoutManager(layoutManager);
-        daftarMahasiswa.setAdapter(mahasiswaAdapter);
-
+        FloatingActionButton addButton = findViewById(R.id.addButon);
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -79,13 +39,62 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(createActivity);
             }
         });
+
+        mainActivity = this;
+        database = new Database(this);
+        RefreshList();
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        list.clear();
-        list.addAll(database.mahasiswaDao().getAll());
-        mahasiswaAdapter.notifyDataSetChanged();
+    public void RefreshList() {
+        SQLiteDatabase db = database.getReadableDatabase();
+        cursor = db.rawQuery("SELECT * FROM  tb_mahasiswa", null);
+        daftar = new String[cursor.getCount()];
+        label = new String[cursor.getCount()];
+        cursor.moveToFirst();
+
+        for(int i = 0; i < cursor.getCount(); i++){
+            cursor.moveToPosition(i);
+            daftar[i] = cursor.getString(0).toString();
+            label[i] = cursor.getString(1).toString();
+        }
+
+        listView = (ListView) findViewById(R.id.daftarMahasiswa);
+        listView.setAdapter(new ArrayAdapter(this, android.R.layout.simple_list_item_1, label));
+        listView.setSelected(true);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+
+            @Override
+            public void onItemClick(AdapterView arg0, View arg1, int arg2, long arg3) {
+                final String selection = daftar[arg2];
+                final CharSequence[] dialogitem = {"Show Company", "Update Company", "Delete Comapany"};
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Select");
+                builder.setItems(dialogitem, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int item) {
+                        switch (item){
+                            case 0:
+                                Intent i = new Intent(getApplicationContext(), DetailActivity.class);
+                                i.putExtra("id", selection);
+                                startActivity(i);
+                                break;
+                            case 1:
+                                Intent in = new Intent(getApplicationContext(), UpdateActivity.class);
+                                in.putExtra("id", selection);
+                                startActivity(in);
+                                break;
+                            case 2:
+                                SQLiteDatabase db = database.getWritableDatabase();
+                                db.execSQL("DELETE FROM tb_mahasiswa WHERE id = '"+ selection +"'");
+                                RefreshList();
+                                break;
+                        }
+                    }
+                });
+                builder.create().show();
+            }
+        });
+        ((ArrayAdapter) listView.getAdapter()).notifyDataSetInvalidated();
     }
 }
